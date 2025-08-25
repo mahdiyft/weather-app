@@ -1,147 +1,202 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>날씨 الان WeatherNow</title>
-  <script src="https://developer.eitaa.com/eitaa-web-app.js"></script>
-  <style>
-    * { box-sizing: border-box; }
-    body { 
-      margin: 0; 
-      padding: 20px;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f0f2f5;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .weather-result {
-      background-color: #ffffff;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-    }
-    .weather-result:hover {
-      transform: translateY(-2px);
-    }
-    .temp {
-      font-size: 1.5rem;
-      margin: 12px 0;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-    .back-button {
-      text-align: center;
-      margin-top: 20px;
-      padding: 10px 16px;
-      background-color: #3498db;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      display: inline-block;
-      font-weight: 500;
-    }
-    .back-button:hover {
-      background-color: #2980b9;
-    }
-    img {
-      vertical-align: middle;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <title>날씨 الان WeatherNow</title>
+    <script src="https://developer.eitaa.com/eitaa-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .weather-result {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .weather-result:hover {
+            transform: translateY(-2px);
+        }
+
+        .temp {
+            font-size: 1.5rem;
+            margin: 12px 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .back-button {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px 16px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .back-button:hover {
+            background-color: #2980b9;
+        }
+
+        img {
+            vertical-align: middle;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1 style="text-align:center; margin: 1rem 0;">پیش بینی هوا</h1>
-    <div id="weather-container"></div>
-  </div>
+    <div class="container">
+        <h1 style="text-align:center; margin: 1rem 0;">پیش بینی هوا</h1>
+        <div id="weather-container"></div>
+    </div>
 
-  <script>
-    const API_KEY = '2a98a59b571a3309e5e2e8f5658d09ce'; // Replace with your OpenWeatherMap API key
-    const city = 'Tehran'; // Default city
+    <script>
+        const API_KEY = '2a98a59b571a3309e5e2e8f5658d09ce'; // Replace with your OpenWeatherMap API key
+        const city = 'Tehran'; // Default city
 
-    async function getWeatherData(city) {
-      try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}`);
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        // async function getWeatherData(city) {
+        //   try {
+        //     const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+        //     if (!response.ok) {
+        //         throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        //     }
+        //     return await response.json();
+        //   } catch (error) {
+        //     console.error('Error fetching weather data:', error);
+        //     throw error;
+        //   }
+        // }
+
+        // function displayWeather(data) {
+        //   const container = document.getElementById('weather-container');
+        //   if (!data || data.cod !== 200) {
+        //     container.innerHTML = '<div class="weather-result">متاسفانه داده‌های پیش‌بینی هوا پیدا نشد.</div>';
+        //     return;
+        //   }
+
+        //   const days = {};
+        //   data.list.forEach(item => {
+        //     const date = item.dt_txt.split(' ')[0];
+        //     if (!days[date]) {
+        //       days[date] = {
+        //         date,
+        //         tempMin: item.main.temp_min,
+        //         tempMax: item.main.temp_max,
+        //         condition: item.weather[0]
+        //       };
+        //     } else {
+        //       days[date].tempMin = Math.min(days[date].tempMin, item.main.temp_min);
+        //       days[date].tempMax = Math.max(days[date].tempMax, item.main.temp_max);
+        //     }
+        //   });
+
+
+        async function getWeatherData(city) {
+            try {
+                // Step 1: First fetch the geographic coordinates using city name
+                const geoResponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+                );
+                const geoData = await geoResponse.json();
+
+                if (geoData.cod !== 200) {
+                    throw new Error(geoData.message || "City not found");
+                }
+
+                const { lat, lon } = geoData;
+
+                // Step 2: Now fetch the 5-day forecast using the retrieved coordinates
+                const forecastResponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+                );
+                const forecastData = await forecastResponse.json();
+
+                displayWeather(forecastData);
+
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+            }
         }
-        return await response.json();
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-        throw error;
-      }
-    }
 
-    function displayWeather(data) {
-      const container = document.getElementById('weather-container');
-      if (!data || data.cod !== 200) {
-        container.innerHTML = '<div class="weather-result">متاسفانه داده‌های پیش‌بینی هوا پیدا نشد.</div>';
-        return;
-      }
+        function displayWeather(data) {
+            if (!data.list) return;
 
-      const days = {};
-      data.list.forEach(item => {
-        const date = item.dt_txt.split(' ')[0];
-        if (!days[date]) {
-          days[date] = {
-            date,
-            tempMin: item.main.temp_min,
-            tempMax: item.main.temp_max,
-            condition: item.weather[0]
-          };
-        } else {
-          days[date].tempMin = Math.min(days[date].tempMin, item.main.temp_min);
-          days[date].tempMax = Math.max(days[date].tempMax, item.main.temp_max);
+            data.list.forEach((item, index) => {
+                const date = new Date(item.dt * 1000).toLocaleDateString();
+                const tempMin = item.main.temp_min;
+                const tempMax = item.main.temp_max;
+
+                // Example UI display logic
+                console.log(`Day ${index + 1}:`, `${date}, Temp: ${tempMin}–${tempMax}°C`);
+            });
         }
-      });
 
-      container.innerHTML = '';
-      
-      Object.values(days).forEach(dayData => {
-        const dayEl = document.createElement('div');
-        dayEl.className = 'weather-result';
-        
-        const icon = document.createElement('img');
-        icon.src = `http://openweathermap.org/img/wn/${dayData.condition.icon}@2x.png`;
-        icon.alt = dayData.condition.description;
-        icon.style.marginRight = '10px';
-        
-        dayEl.innerHTML = `
+
+        container.innerHTML = '';
+
+        Object.values(days).forEach(dayData => {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'weather-result';
+
+            const icon = document.createElement('img');
+            icon.src = `http://openweathermap.org/img/wn/${dayData.condition.icon}@2x.png`;
+            icon.alt = dayData.condition.description;
+            icon.style.marginRight = '10px';
+
+            dayEl.innerHTML = `
           <div><strong>تاریخ:</strong> ${new Date(dayData.date * 1000).toLocaleDateString('fa-IR')}</div>
           <div class="temp">${Math.round(dayData.tempMin)}/${Math.round(dayData.tempMax)} °C</div>
           <div><strong>شرایط:</strong> ${dayData.condition.description}</div>
         `;
-        
-        dayEl.prepend(icon);
-        container.appendChild(dayEl);
-      });
+
+            dayEl.prepend(icon);
+            container.appendChild(dayEl);
+        });
     }
 
-    function createBackButton() {
-      const button = document.createElement('div');
-      button.className = 'back-button';
-      button.textContent = 'بازگشت به منو';
-      button.onclick = () => {
-        document.location.href = document.location.href;
-      };
-      document.body.appendChild(button);
-    }
+        function createBackButton() {
+            const button = document.createElement('div');
+            button.className = 'back-button';
+            button.textContent = 'بازگشت به منو';
+            button.onclick = () => {
+                document.location.href = document.location.href;
+            };
+            document.body.appendChild(button);
+        }
 
-    // Initial load
-    (async () => {
-      try {
-        await getWeatherData(city);
-      } catch (error) {
-        console.error('Initialization error:', error);
-      }
-    })();
+        // Initial load
+        (async () => {
+            try {
+                await getWeatherData(city);
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        })();
 
-    window.addEventListener('popstate', () => {
-      location.reload();
-    });
-  </script>
+        window.addEventListener('popstate', () => {
+            location.reload();
+        });
+    </script>
 </body>
+
 </html>
