@@ -61,6 +61,25 @@
         img {
             vertical-align: middle;
         }
+
+        .weather-card {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+        }
+
+        .weather-card h3 {
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+
+        .weather-card p {
+            margin: 8px 0;
+        }
     </style>
 </head>
 
@@ -123,7 +142,8 @@
                     throw new Error(geoData.message || "City not found");
                 }
 
-                const { lat, lon } = geoData;
+                const lat = geoData.coord.lat;
+                const lon = geoData.coord.lon;
 
                 // Step 2: Now fetch the 5-day forecast using the retrieved coordinates
                 const forecastResponse = await fetch(
@@ -141,38 +161,75 @@
         function displayWeather(data) {
             if (!data.list) return;
 
-            data.list.forEach((item, index) => {
-                const date = new Date(item.dt * 1000).toLocaleDateString();
-                const tempMin = item.main.temp_min;
-                const tempMax = item.main.temp_max;
+            const container = document.getElementById('weather-container');
+            container.innerHTML = ''; // Clear existing content
 
-                // Example UI display logic
-                console.log(`Day ${index + 1}:`, `${date}, Temp: ${tempMin}–${tempMax}°C`);
+            // Process data into daily aggregates
+            const days = {};
+            data.list.forEach(item => {
+                const date = new Date(item.dt * 1000).toISOString().split('T')[0]; // Extract date as "YYYY-MM-DD"
+                if (!days[date]) {
+                    days[date] = {
+                        date: date,
+                        description: item.weather[0].description,
+                        tempMin: item.main.temp_min.toFixed(1), // Use correct data path
+                        tempMax: item.main.temp_max.toFixed(1)  // Use correct data path
+                    };
+                }
+            });
+
+            // Convert object to array and sort by date
+            const dailyForecast = Object.keys(days).map(date => days[date]);
+            dailyForecast.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Create and append weather cards
+            dailyForecast.forEach((day, index) => {
+                const card = document.createElement('div');
+                card.className = 'weather-card';
+                card.innerHTML = `
+            <h3>Day ${index + 1}: ${day.date}</h3>
+            <p><strong>Description:</strong> ${day.description}</p>
+            <p><strong>Min Temp:</strong> ${day.tempMin}°C</p>
+            <p><strong>Max Temp:</strong> ${day.tempMax}°C</p>
+        `;
+                container.appendChild(card);
             });
         }
 
+    //     function displayWeather(forecastData) {
+    //         const weatherContainer = document.getElementById('weather-container'); // Ensure you have a container with this ID
+    //         console.log(forecastData);
+    //         const groupedByDate = forecastData.reduce((acc, day) => {
+    //             const date = day.date.split(' ')[0]; // Use date string formatted as "YYYY-MM-DD"
+    //             if (!acc[date]) {
+    //                 acc[date] = {
+    //                     date,
+    //                     description: day.description,
+    //                     temp_min: day.temp_min,
+    //                     temp_max: day.temp_max,
+    //                 };
+    //             } else {
+    //                 // Update if a lower temp_min or higher temp_max is found
+    //                 acc[date].temp_min = Math.min(acc[date].temp_min, day.temp_min);
+    //                 acc[date].temp_max = Math.max(acc[date].temp_max, day.temp_max);
+    //             }
+    //             return acc;
+    //         }, {});
 
-        container.innerHTML = '';
+    //         // Render each day as a separate card
+    //         Object.values(groupedByDate).forEach(day => {
+    //             const card = document.createElement('div');
+    //             card.className = 'weather-card';
+    //             card.innerHTML = `
+    //   <h3>${day.date}</h3>
+    //   <p><strong>Condition:</strong> ${day.description}</p>
+    //   <p><strong>Min Temp:</strong> ${day.temp_min}°C</p>
+    //   <p><strong>Max Temp:</strong> ${day.temp_max}°C</p>
+    // `;
+    //             weatherContainer.appendChild(card);
+    //         });
+    //     }
 
-        Object.values(days).forEach(dayData => {
-            const dayEl = document.createElement('div');
-            dayEl.className = 'weather-result';
-
-            const icon = document.createElement('img');
-            icon.src = `http://openweathermap.org/img/wn/${dayData.condition.icon}@2x.png`;
-            icon.alt = dayData.condition.description;
-            icon.style.marginRight = '10px';
-
-            dayEl.innerHTML = `
-          <div><strong>تاریخ:</strong> ${new Date(dayData.date * 1000).toLocaleDateString('fa-IR')}</div>
-          <div class="temp">${Math.round(dayData.tempMin)}/${Math.round(dayData.tempMax)} °C</div>
-          <div><strong>شرایط:</strong> ${dayData.condition.description}</div>
-        `;
-
-            dayEl.prepend(icon);
-            container.appendChild(dayEl);
-        });
-    
 
         function createBackButton() {
             const button = document.createElement('div');
